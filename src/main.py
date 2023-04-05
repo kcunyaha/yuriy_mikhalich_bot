@@ -1,8 +1,7 @@
-import datetime
 import logging
 import os
 import random
-import re
+
 import threading
 import time
 
@@ -11,6 +10,9 @@ import schedule
 import telebot
 from decouple import config
 from dotenv import load_dotenv, find_dotenv
+
+from src.is_target_message_filter import is_target_message
+from src.where_are_yura_calculation import where_are_yura
 
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
 
@@ -30,6 +32,13 @@ def start(message):
                      parse_mode='html')
 
 
+@bot.message_handler(commands=['mvp'])
+def start(message):
+    bot.send_message(message.chat.id,
+                     'сами в своем говне ковыряйтесь я пойду нормальную платформу делать',
+                     parse_mode='html')
+
+
 @bot.message_handler(commands=['govbar'])
 def go_v_bar(message):
     # отправляем GET-запрос на сервер OSM
@@ -43,58 +52,26 @@ def go_v_bar(message):
 
 
 @bot.message_handler(commands=['whereareyura'])
-def where_are_yura(message):
-    now = datetime.datetime.now()  # получаем текущее время
-    sleep_time = datetime.time(8, 30, 0)
-    taxi_morning_time = datetime.time(10, 5, 0)
-    working_time = datetime.time(19, 30, 0)
-    taxi_evening_time = datetime.time(21, 0, 0)
-    if now.time() <= sleep_time:
-        bot.send_message(message.chat.id, 'шеф, я сейчас сплю =) напиши попозже всё порешаем все вопросики')
-    elif now.time() <= taxi_morning_time:
-        bot.send_message(message.chat.id,
-                         'началник, МАКСИМАЛНО еду на такси, на дейлик опоздаю на 5 минут, не бей тока')
-    elif now.time() <= working_time:
-        chance = random.randint(1, 100)
-        if chance >= 20:
-            bot.send_message(message.chat.id, 'ЧЕГО ТЫ ОПЯТЬ СИДИШЬ РАБОТАЕШЬ, курить пойдем =)')
-        else:
-            bot.send_message(message.chat.id, 'балин я работаю МОЩНО, ничего не успеваю =(')
-    elif now.time() <= taxi_evening_time:
-        bot.send_message(message.chat.id, 'бро, я уже домой еду, давай завтра поправлю все баги и выкачу')
-    else:
-        bot.send_message(message.chat.id, 'ваяяя я тут МОЩНО сижу дома кайфую =)')
-
-
-def is_target_message(message):
-    if message.chat.type == 'private':
-        return True
-    if re.search(fr'\B@{bot.get_me().username}\b', message.text):
-        return True
-    if message.reply_to_message and message.reply_to_message.from_user.id == BOT_ID:
-        return True
-    return False
+def where_are_yura_reply(message):
+    bot.send_message(message.chat.id, where_are_yura())
 
 
 @bot.message_handler(func=is_target_message)
 def text_reply(message):
-    bot.send_message(message.chat.id, f'<i>ваяяя</i> шеф, извиняй, опенаи не прикрутил костян пока', parse_mode='html')
+    bot.send_message(message.chat.id, f'<i>ваяяя</i> шеф, извиняй, опенаи не прикрутил костян пока, это только MVP', parse_mode='html')
 
 
-@bot.message_handler(content_types=['audio', 'photo', 'voice', 'document', 'location', 'contact'], func=lambda
-        message: message.reply_to_message is not None or message.entities is not None or message.chat.type == 'private')
+@bot.message_handler(content_types=['audio', 'photo', 'voice', 'document', 'location', 'contact'], func=is_target_message)
 def media_reply(message):
     bot.send_message(message.chat.id, 'бро я текст ФТ с трудом понимаю зачем ты так сложно', parse_mode='html')
 
 
-@bot.message_handler(content_types=['video'], func=lambda
-        message: message.reply_to_message is not None or message.entities is not None or message.chat.type == 'private')
+@bot.message_handler(content_types=['video'], func=is_target_message)
 def video_reply(message):
     bot.send_message(message.chat.id, 'видос бомба бро!!', parse_mode='html')
 
 
-@bot.message_handler(content_types=['sticker'], func=lambda
-        message: message.reply_to_message is not None or message.entities is not None or message.chat.type == 'private')
+@bot.message_handler(content_types=['sticker'], func=is_target_message)
 def sticker_reply(message):
     bot.send_message(message.chat.id, 'бро зачотный стикер =)', parse_mode='html')
 
