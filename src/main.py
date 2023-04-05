@@ -1,8 +1,7 @@
-import datetime
 import logging
 import os
 import random
-import re
+
 import threading
 import time
 
@@ -12,7 +11,8 @@ import telebot
 from decouple import config
 from dotenv import load_dotenv, find_dotenv
 
-from src import where_are_yura_calculation
+from src.is_target_message_filter import is_target_message
+from src.where_are_yura_calculation import where_are_yura
 
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
 
@@ -53,17 +53,7 @@ def go_v_bar(message):
 
 @bot.message_handler(commands=['whereareyura'])
 def where_are_yura_reply(message):
-    bot.send_message(message.chat.id, where_are_yura_calculation.where_are_yura())
-
-
-def is_target_message(message):
-    if message.chat.type == 'private':
-        return True
-    if re.search(fr'\B@{bot.get_me().username}\b', message.text):
-        return True
-    if message.reply_to_message and message.reply_to_message.from_user.id == BOT_ID:
-        return True
-    return False
+    bot.send_message(message.chat.id, where_are_yura())
 
 
 @bot.message_handler(func=is_target_message)
@@ -71,20 +61,17 @@ def text_reply(message):
     bot.send_message(message.chat.id, f'<i>ваяяя</i> шеф, извиняй, опенаи не прикрутил костян пока, это только MVP', parse_mode='html')
 
 
-@bot.message_handler(content_types=['audio', 'photo', 'voice', 'document', 'location', 'contact'], func=lambda
-        message: message.reply_to_message is not None or message.entities is not None or message.chat.type == 'private')
+@bot.message_handler(content_types=['audio', 'photo', 'voice', 'document', 'location', 'contact'], func=is_target_message)
 def media_reply(message):
     bot.send_message(message.chat.id, 'бро я текст ФТ с трудом понимаю зачем ты так сложно', parse_mode='html')
 
 
-@bot.message_handler(content_types=['video'], func=lambda
-        message: message.reply_to_message is not None or message.entities is not None or message.chat.type == 'private')
+@bot.message_handler(content_types=['video'], func=is_target_message)
 def video_reply(message):
     bot.send_message(message.chat.id, 'видос бомба бро!!', parse_mode='html')
 
 
-@bot.message_handler(content_types=['sticker'], func=lambda
-        message: message.reply_to_message is not None or message.entities is not None or message.chat.type == 'private')
+@bot.message_handler(content_types=['sticker'], func=is_target_message)
 def sticker_reply(message):
     bot.send_message(message.chat.id, 'бро зачотный стикер =)', parse_mode='html')
 
